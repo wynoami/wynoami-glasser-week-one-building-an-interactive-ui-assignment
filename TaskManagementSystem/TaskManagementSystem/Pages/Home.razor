@@ -68,6 +68,12 @@
                 <option value="@s">@s</option>
             }
         </select>
+
+        @if (editError != null)
+        {
+            <p style="color:red">@editError</p>
+        }
+
         <button @onclick="SaveEdit">Save</button>
         <button @onclick="CancelEdit">Cancel</button>
     </div>
@@ -91,6 +97,7 @@
     private string editTitle = "";        
     private string editDescription = "";        
     private string editStatus = "Not Started";
+    private string? editError;
 
     protected override void OnInitialized()
     {
@@ -128,20 +135,30 @@
         editTitle = task.Title;
         editDescription = task.Description;
         editStatus = task.Status;
+        editError = null;
     }
 
     private void SaveEdit()
     {
         if (editingTask is null) return;
 
-        if (string.IsNullOrWhiteSpace(editTitle)) return;
+        if (string.IsNullOrWhiteSpace(editTitle))
+        {
+            editError = "Title can't be empty.";
+            return;
+        }
 
         editingTask.Title = editTitle;
         editingTask.Description = editDescription;
         editingTask.Status = editStatus;
+        editError = null;
         editingTask = null;
     }
 
-    private void CancelEdit() => editingTask = null;
+    private void CancelEdit()
+    {
+        editingTask = null;
+        editError = null;
+    }
 
 }
