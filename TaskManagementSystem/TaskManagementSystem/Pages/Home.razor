@@ -134,6 +134,8 @@
     {
         if (editingTask is null) return;
 
+        if (string.IsNullOrWhiteSpace(editTitle)) return;
+
         editingTask.Title = editTitle;
         editingTask.Description = editDescription;
         editingTask.Status = editStatus;
