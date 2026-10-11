@@ -1,7 +1,145 @@
 ﻿@page "/"
+@using TaskManagementSystem.Models
 
 <PageTitle>Home</PageTitle>
 
-<h1>Hello, world!</h1>
+<h1>Task Dashboard</h1>
 
-Welcome to your new app.
+<!-- Filters -->
+<div>
+    <input placeholder="Search by Title" @bind="titleFilter" @bind:event="oninput" />
+
+    <select @bind="statusFilter">
+        <option value="">All Statuses</option>
+        @foreach (var s in statuses)
+        {
+            <option value="@s">@s</option>
+        }
+    </select>
+</div>
+
+<!-- Task list -->
+<table class="table">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Description</th>
+            <th>Status</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var task in FilteredTasks)
+        {
+            <tr>
+                <td>@task.Title</td>
+                <td>@task.Description</td>
+                <td>@task.Status</td>
+                <td><button @onclick="() => StartEdit(task)">Edit</button></td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<!-- Add form -->
+<h3>Add a Task</h3>
+<div>
+    <input placeholder="Title" @bind="newTitle" @bind:event="oninput"/>
+    <input placeholder="Description" @bind="newDescription" @bind:event="oninput"/>
+    <select @bind="newStatus">
+        @foreach (var s in statuses)
+        {
+            <option value="@s">@s</option>
+        }
+    </select>
+    <button @onclick="AddTask">Add</button>
+</div>
+
+<!-- Edit form -->
+@if (editingTask != null)
+{
+    <h3>Edit Task</h3>
+    <div>
+        <input @bind="editTitle" />
+        <input @bind="editDescription" />
+        <select @bind="editStatus">
+            @foreach (var s in statuses)
+            {
+                <option value="@s">@s</option>
+            }
+        </select>
+        <button @onclick="SaveEdit">Save</button>
+        <button @onclick="CancelEdit">Cancel</button>
+    </div>
+}
+
+@code {
+    private List<TaskItem> tasks = new();
+    private readonly string[] statuses = { "Not Started", "In Progress", "Completed" };
+
+    // Filters
+    private string titleFilter = "";
+    private string statusFilter = "";
+
+    // Add form
+    private string newTitle = "";
+    private string newDescription = "";
+    private string newStatus = "Not Started";
+
+    // Edit form
+    private TaskItem? editingTask;
+    private string editTitle = "";        
+    private string editDescription = "";        
+    private string editStatus = "Not Started";
+
+    protected override void OnInitialized()
+    {
+        tasks = new List<TaskItem>
+        {
+            new TaskItem { Title = "Write report", Description = "Quarterly summary", Status = "Not Started" },
+            new TaskItem { Title = "Review pull request", Description = "Check the auth changes", Status = "In Progress" },
+            new TaskItem { Title = "Update resume", Description = "Add Atlas projects", Status = "Completed" }
+        };
+    }
+
+    private IEnumerable<TaskItem> FilteredTasks => tasks.Where(t => 
+        ( string.IsNullOrWhiteSpace(titleFilter) || t.Title.Contains(titleFilter, StringComparison.OrdinalIgnoreCase)) &&
+        (string.IsNullOrEmpty(statusFilter) || t.Status == statusFilter));
+
+    private void AddTask()
+    {
+        if (string.IsNullOrWhiteSpace(newTitle)) return;
+
+        tasks.Add(new TaskItem
+        {
+            Title = newTitle,
+            Description = newDescription,
+            Status = newStatus
+        });
+
+        newTitle = "";
+        newDescription = "";
+        newStatus = "Not Started";
+    }
+
+    private void StartEdit(TaskItem task)
+    {
+        editingTask = task;
+        editTitle = task.Title;
+        editDescription = task.Description;
+        editStatus = task.Status;
+    }
+
+    private void SaveEdit()
+    {
+        if (editingTask is null) return;
+
+        editingTask.Title = editTitle;
+        editingTask.Description = editDescription;
+        editingTask.Status = editStatus;
+        editingTask = null;
+    }
+
+    private void CancelEdit() => editingTask = null;
+
+}
